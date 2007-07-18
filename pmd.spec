@@ -32,7 +32,7 @@
 
 Name:           pmd
 Version:        3.6
-Release:        %mkrel 1.3.1
+Release:        %mkrel 1.3.2
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
@@ -49,11 +49,11 @@ BuildRequires:  ant-junit
 BuildRequires:  junit
 BuildRequires:  jaxen >= 0:1.1
 BuildRequires:  xerces-j2
-BuildRequires:  xml-commons-apis >= 1.3.02
+BuildRequires:  xml-commons-jaxp-1.3-apis >= 1.3.02
 BuildRequires:  jakarta-oro
 Requires:       jaxen >= 0:1.1
 Requires:       xerces-j2
-Requires:       xml-commons-apis >= 1.3.02
+Requires:       xml-commons-jaxp-1.3-apis >= 1.3.02
 Requires:       jakarta-oro
 Group:          Development/Java
 %if %{gcj_support}
@@ -109,7 +109,7 @@ export CLASSPATH=$(build-classpath \
 jaxen \
 oro \
 xerces-j2 \
-xml-commons-apis)
+xml-commons-jaxp-1.3-apis)
 CLASSPATH=$CLASSPATH:target/classes:target/test-classes
 cd bin
 %{ant} -Dbuild.sysclasspath=only dist javadoc
