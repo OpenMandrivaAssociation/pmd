@@ -31,22 +31,21 @@
 %define gcj_support 1
 
 Name:           pmd
-Version:        3.6
-Release:        %mkrel 1.3.2
+Version:        4.0
+Release:        %mkrel 0.0.1
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
-
-# cvs -z3 -d:pserver:anonymous@pmd.cvs.sourceforge.net:/cvsroot/pmd export \
-# -r pmd_release_3_6 pmd
-# tar -czvf pmd-src.tar.gz pmd
-Source0:        %{name}-src.tar.gz
-Url:            http://pmd.sourceforge.net/
-
+URL:            http://pmd.sourceforge.net/
+# svn co https://pmd.svn.sourceforge.net/svnroot/pmd/tags/pmd/pmd_release_4_0 pmd && tar cvjf pmd-src.tar.bz2 pmd
+Source0:        %{name}-src.tar.bz2
+Patch0:         %{name}-asm.patch
+Patch1:         %{name}-no-classpath-in-manifest.patch
 BuildRequires:  jpackage-utils >= 0:1.6
 BuildRequires:  ant >= 0:1.6
-BuildRequires:  ant-junit
-BuildRequires:  junit
+BuildRequires:  ant-nodeps
+BuildRequires:  javacc
+BuildRequires:  junit4
 BuildRequires:  jaxen >= 0:1.1
 BuildRequires:  xerces-j2
 BuildRequires:  xml-commons-jaxp-1.3-apis >= 1.3.02
@@ -97,22 +96,31 @@ Javadoc for %{name}.
 
 %prep
 %setup -q -n %{name}
+%{_bindir}/find . -type d -name "*.svn" | %{_bindir}/xargs -t %{__rm} -r
+%patch0 -p1
+%patch1 -p1
+%{__perl} -pi -e 's/<javac( |$)/<javac nowarn="true" /g' bin/build.xml
+%{__perl} -pi -e 's/JavaCharStream\.java/CharStream.java/g' bin/build.xml
 
 # set right permissions
-find . -name "*.sh" -exec chmod 755 \{\} \;
+%{_bindir}/find . -name "*.sh" | %{_bindir}/xargs -t %{__chmod} 755
 # remove all binary libs
-find . -name "*.jar" -exec rm -f {} \;
+%{_bindir}/find . -name "*.jar" | %{_bindir}/xargs -t %{__rm}
+
+#%{__rm} src/net/sourceforge/pmd/ast/*
 
 %build
-export OPT_JAR_LIST="ant/ant-junit junit"
-export CLASSPATH=$(build-classpath \
+export OPT_JAR_LIST="ant/ant-nodeps"
+export CLASSPATH=$(%{_bindir}/build-classpath \
+javacc \
 jaxen \
 oro \
+junit4 \
 xerces-j2 \
 xml-commons-jaxp-1.3-apis)
 CLASSPATH=$CLASSPATH:target/classes:target/test-classes
 cd bin
-%{ant} -Dbuild.sysclasspath=only dist javadoc
+%{ant} -Dbuild.sysclasspath=only -Djavacc-home.path=%{_javadir} jjtree jspjjtree cppjavacc jar javadoc
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -124,18 +132,19 @@ install -m 644 lib/%{name}-%{version}.jar \
 (cd $RPM_BUILD_ROOT%{_javadir} && for jar in *-%{version}.jar; \
    do ln -sf ${jar} ${jar/-%{version}/}; done)
 install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
-cp -pr etc/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
+cp -a etc/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
+%{__perl} -pi -e 's|/usr/local/bin|%{_bindir}|' $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc/*.rb
 install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
-cp -pr rulesets/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
+cp -a rulesets/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
 
 # javadoc
 install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -pr docs/api/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
+cp -a docs/api/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
 ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name}
 
 # manual
 install -d -m 755 $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
-cp -p LICENSE.txt $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+cp -a LICENSE.txt $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 
 %if %{gcj_support}
 %{_bindir}/aot-compile-rpm
@@ -160,7 +169,12 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/gcj/%{name}
 %attr(-,root,root) %{_libdir}/gcj/%{name}/*
 %endif
-%{_datadir}/%{name}-%{version}
+%dir %{_datadir}/%{name}-%{version}
+%attr(-,root,root) %{_datadir}/%{name}-%{version}/*
+#E: pmd non-executable-script /usr/share/pmd-4.0/etc/fr_docs/copy_up.sh 0644
+#E: pmd wrong-script-interpreter /usr/share/pmd-4.0/etc/rule_summary.rb "/usr/local/bin/ruby"
+#E: pmd non-executable-script /usr/share/pmd-4.0/etc/rule_summary.rb 0644
+#E: pmd invalid-dependency /usr/local/bin/ruby
 
 %files manual
 %defattr(0644,root,root,0755)
