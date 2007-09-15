@@ -32,7 +32,7 @@
 
 Name:           pmd
 Version:        4.0
-Release:        %mkrel 0.0.1
+Release:        %mkrel 0.0.2
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
@@ -56,8 +56,6 @@ Requires:       xml-commons-jaxp-1.3-apis >= 1.3.02
 Requires:       jakarta-oro
 Group:          Development/Java
 %if %{gcj_support}
-Requires(post): java-gcj-compat
-Requires(postun): java-gcj-compat
 BuildRequires:  java-gcj-compat-devel
 %else
 BuildArch:      noarch
