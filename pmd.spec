@@ -32,7 +32,7 @@
 
 Name:           pmd
 Version:        4.0
-Release:        %mkrel 0.0.2
+Release:        %mkrel 0.0.3
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
@@ -41,7 +41,7 @@ URL:            http://pmd.sourceforge.net/
 Source0:        %{name}-src.tar.bz2
 Patch0:         %{name}-asm.patch
 Patch1:         %{name}-no-classpath-in-manifest.patch
-BuildRequires:  jpackage-utils >= 0:1.6
+BuildRequires:  java-rpmbuild >= 0:1.6
 BuildRequires:  ant >= 0:1.6
 BuildRequires:  ant-nodeps
 BuildRequires:  javacc
