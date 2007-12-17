@@ -61,7 +61,6 @@ BuildRequires:  java-gcj-compat-devel
 BuildArch:      noarch
 BuildRequires:  java-devel
 %endif
-Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 
 %description
 PMD scans Java source code and looks for potential 
