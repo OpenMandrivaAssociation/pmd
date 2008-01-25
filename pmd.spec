@@ -32,7 +32,7 @@
 
 Name:           pmd
 Version:        4.0
-Release:        %mkrel 0.0.3
+Release:        %mkrel 0.0.4
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
@@ -50,6 +50,7 @@ BuildRequires:  jaxen >= 0:1.1
 BuildRequires:  xerces-j2
 BuildRequires:  xml-commons-jaxp-1.3-apis >= 1.3.02
 BuildRequires:  jakarta-oro
+BuildRequires:  asm2
 Requires:       jaxen >= 0:1.1
 Requires:       xerces-j2
 Requires:       xml-commons-jaxp-1.3-apis >= 1.3.02
@@ -115,7 +116,8 @@ jaxen \
 oro \
 junit4 \
 xerces-j2 \
-xml-commons-jaxp-1.3-apis)
+xml-commons-jaxp-1.3-apis \
+asm2\ )\
 CLASSPATH=$CLASSPATH:target/classes:target/test-classes
 cd bin
 %{ant} -Dbuild.sysclasspath=only -Djavacc-home.path=%{_javadir} jjtree jspjjtree cppjavacc jar javadoc
