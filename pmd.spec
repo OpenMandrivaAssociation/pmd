@@ -31,16 +31,17 @@
 %define gcj_support 1
 
 Name:           pmd
-Version:        4.0
-Release:        %mkrel 0.0.4
+Version:        4.2.1
+Release:        %mkrel 0.0.1
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
 URL:            http://pmd.sourceforge.net/
-# svn co https://pmd.svn.sourceforge.net/svnroot/pmd/tags/pmd/pmd_release_4_0 pmd && tar cvjf pmd-src.tar.bz2 pmd
-Source0:        %{name}-src.tar.bz2
+## svn export https://pmd.svn.sourceforge.net/svnroot/pmd/tags/pmd/pmd_release_4_2_1 pmd && tar cvjf pmd-src.tar.bz2 pmd
+#Source0:        %{name}-src.tar.bz2
+Source0:        http://downloads.sourceforge.net/pmd/pmd-src-4.2.1.zip
 Patch0:         %{name}-asm.patch
-Patch1:         %{name}-no-classpath-in-manifest.patch
+Patch1:         %{name}-4.2.1-no-retroweaver.patch
 BuildRequires:  java-rpmbuild >= 0:1.6
 BuildRequires:  ant >= 0:1.6
 BuildRequires:  ant-nodeps
@@ -94,8 +95,11 @@ Group:          Development/Java
 Javadoc for %{name}.
 
 %prep
-%setup -q -n %{name}
-%{_bindir}/find . -type d -name "*.svn" | %{_bindir}/xargs -t %{__rm} -r
+%setup -q
+# XXX: uses internal junit4 API
+%{__rm} -r regress/test/net/sourceforge/pmd/*
+##%{_bindir}/find . -type d -name "*.svn" | %{_bindir}/xargs -t %{__rm} -r
+%{__perl} -pi -e 's/\r\n$/\n/g' src/net/sourceforge/pmd/dcd/graph/UsageGraphBuilder.java
 %patch0 -p1
 %patch1 -p1
 %{__perl} -pi -e 's/<javac( |$)/<javac nowarn="true" /g' bin/build.xml
