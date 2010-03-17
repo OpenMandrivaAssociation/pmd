@@ -32,7 +32,7 @@
 
 Name:           pmd
 Version:        4.2.1
-Release:        %mkrel 2.0.3
+Release:        %mkrel 2.0.4
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD Style
