@@ -127,35 +127,35 @@ cd bin
 %{ant} -Dbuild.sysclasspath=only -Djavacc-home.path=%{_javadir} jjtree jspjjtree cppjavacc jar javadoc
 
 %install
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 # jar
-install -d -m 755 $RPM_BUILD_ROOT%{_javadir}
+install -d -m 755 %{buildroot}%{_javadir}
 install -m 644 lib/%{name}-%{version}.jar \
-  $RPM_BUILD_ROOT%{_javadir}/%{name}-%{version}.jar
-(cd $RPM_BUILD_ROOT%{_javadir} && for jar in *-%{version}.jar; \
+  %{buildroot}%{_javadir}/%{name}-%{version}.jar
+(cd %{buildroot}%{_javadir} && for jar in *-%{version}.jar; \
    do ln -sf ${jar} ${jar/-%{version}/}; done)
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
-cp -a etc/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
-%{__perl} -pi -e 's|/usr/local/bin|%{_bindir}|' $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc/*.rb
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
-cp -a rulesets/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
+install -d -m 755 %{buildroot}%{_datadir}/%{name}-%{version}/etc
+cp -a etc/* %{buildroot}%{_datadir}/%{name}-%{version}/etc
+%{__perl} -pi -e 's|/usr/local/bin|%{_bindir}|' %{buildroot}%{_datadir}/%{name}-%{version}/etc/*.rb
+install -d -m 755 %{buildroot}%{_datadir}/%{name}-%{version}/rulesets
+cp -a rulesets/* %{buildroot}%{_datadir}/%{name}-%{version}/rulesets
 
 # javadoc
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -a docs/api/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name}
+install -d -m 755 %{buildroot}%{_javadocdir}/%{name}-%{version}
+cp -a docs/api/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+ln -s %{name}-%{version} %{buildroot}%{_javadocdir}/%{name}
 
 # manual
-install -d -m 755 $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
-cp -a LICENSE.txt $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+install -d -m 755 %{buildroot}%{_docdir}/%{name}-%{version}
+cp -a LICENSE.txt %{buildroot}%{_docdir}/%{name}-%{version}
 
 %if %{gcj_support}
 %{_bindir}/aot-compile-rpm
 %endif
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %if %{gcj_support}
 %post
