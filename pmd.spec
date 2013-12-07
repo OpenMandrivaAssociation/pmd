@@ -33,7 +33,7 @@
 Summary:	Scans Java source code and looks for potential problems
 Name:		pmd
 Version:	4.2.1
-Release:	2.0.8
+Release:	2.0.9
 License:	BSD Style
 Group:		Development/Java
 Url:		http://pmd.sourceforge.net/
