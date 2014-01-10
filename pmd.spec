@@ -30,7 +30,7 @@
 #
 Name:           pmd
 Version:        5.0.5
-Release:        1.0%{?dist}
+Release:        2.0%{?dist}
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
 License:        BSD
@@ -60,7 +60,7 @@ BuildRequires:  beust-jcommander
 BuildRequires:  mockito
 BuildRequires:  javacc
 BuildRequires:  jaxen
-BuildRequires:  saxon
+BuildRequires:  saxon >= 9.3.0.4-9
 BuildRequires:  objectweb-asm
 Requires:       jpackage-utils
 Requires:       java
@@ -69,7 +69,7 @@ Requires:       apache-commons-io
 Requires:       beust-jcommander
 Requires:       javacc
 Requires:       jaxen
-Requires:       saxon
+Requires:       saxon >= 9.3.0.4-9
 Requires:       objectweb-asm
 
 %description
@@ -96,8 +96,8 @@ API documentation for %{name}.
 %prep
 %setup -q -n %{name}-src-%{version}
 
-%patch0 -p0
-%patch1 -p0
+%patch0 -p0 -b.orig
+%patch1 -p0 -b.orig
 
 # remove all binary libs
 find . -name "*.jar" -exec rm -f {} \;
@@ -108,7 +108,7 @@ find . -name "*.class" -exec rm -f {} \;
 %build
 # some tests are failing so ignore them
 # this may be because fedora has a newer rhino than pmd expects
-%mvn_build -X -- -Dmaven.test.failure.ignore=true -Dmaven.clover.skip=true
+%mvn_build -- -Dmaven.test.failure.ignore=true -Dmaven.clover.skip=true
 
 %install
 %mvn_install
@@ -120,6 +120,9 @@ find . -name "*.class" -exec rm -f {} \;
 %doc LICENSE.txt
 
 %changelog
+* Tue Oct 15 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:5.0.5-2
+- Require saxon >= 9.3.0.4-9
+
 * Tue Aug 13 2013 Alexander Kurtakov <akurtako@redhat.com> 0:5.0.5-1
 - Update to latest upstream.
 
