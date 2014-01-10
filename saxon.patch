@@ -1,0 +1,171 @@
+--- pom.xml.orig	2013-05-01 12:29:22.000000000 +0100
++++ pom.xml	2013-06-28 17:34:09.151508899 +0100
+@@ -573,12 +573,12 @@
+             <version>3.2</version>
+         </dependency>
+         <dependency>
+-            <groupId>net.sourceforge.saxon</groupId>
++            <groupId>net.sf.saxon</groupId>
+             <artifactId>saxon</artifactId>
+             <version>9.1.0.8</version>
+         </dependency>
+         <dependency>
+-            <groupId>net.sourceforge.saxon</groupId>
++            <groupId>net.sf.saxon</groupId>
+             <artifactId>saxon</artifactId>
+             <version>9.1.0.8</version>
+             <classifier>dom</classifier>
+diff -ur src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AbstractNodeInfo.java src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AbstractNodeInfo.java
+--- src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AbstractNodeInfo.java	2013-05-01 12:29:22.000000000 +0100
++++ src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AbstractNodeInfo.java	2013-06-28 17:53:32.777197093 +0100
+@@ -3,15 +3,15 @@
+ import net.sf.saxon.Configuration;
+ import net.sf.saxon.event.Receiver;
+ import net.sf.saxon.om.Axis;
+-import net.sf.saxon.om.AxisIterator;
++import net.sf.saxon.tree.iter.AxisIterator;
+ import net.sf.saxon.om.DocumentInfo;
+-import net.sf.saxon.om.FastStringBuffer;
++import net.sf.saxon.tree.util.FastStringBuffer;
+ import net.sf.saxon.om.NamePool;
+ import net.sf.saxon.om.NodeInfo;
+ import net.sf.saxon.om.SequenceIterator;
+-import net.sf.saxon.om.SiblingCountingNode;
+-import net.sf.saxon.om.VirtualNode;
+-import net.sf.saxon.om.Navigator.AxisFilter;
++import net.sf.saxon.tree.wrapper.SiblingCountingNode;
++import net.sf.saxon.tree.wrapper.VirtualNode;
++import net.sf.saxon.tree.util.Navigator.AxisFilter;
+ import net.sf.saxon.pattern.NodeTest;
+ import net.sf.saxon.trans.XPathException;
+ import net.sf.saxon.value.Value;
+@@ -69,6 +69,13 @@
+     /**
+      * {@inheritDoc}
+      */
++    public Object getRealNode() {
++	throw createUnsupportedOperationException("VirtualNode.getRealNode()");
++    }
++
++    /**
++     * {@inheritDoc}
++     */
+     public int getSiblingPosition() {
+ 	throw createUnsupportedOperationException("SiblingCountingNode.getSiblingPosition()");
+     }
+@@ -90,6 +97,14 @@
+     /**
+      * {@inheritDoc}
+      */
++    public void copy(Receiver receiver, int copyOptions, int locationId)
++	    throws XPathException {
++	throw createUnsupportedOperationException("ValueRepresentation.copy(Receiver, int, int)");
++    }
++
++    /**
++     * {@inheritDoc}
++     */
+     public void copy(Receiver receiver, int whichNamespaces, boolean copyAnnotations, int locationId)
+ 	    throws XPathException {
+ 	throw createUnsupportedOperationException("ValueRepresentation.copy(Receiver, int, boolean, int)");
+@@ -166,7 +181,7 @@
+      *
+      * {@inheritDoc}
+      */
+-    public int getDocumentNumber() {
++    public long getDocumentNumber() {
+ 	return 0;
+     }
+ 
+diff -ur src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AttributeAxisIterator.java src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AttributeAxisIterator.java
+--- src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AttributeAxisIterator.java	2013-05-01 12:29:22.000000000 +0100
++++ src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/AttributeAxisIterator.java	2013-06-28 17:29:42.888914430 +0100
+@@ -1,6 +1,6 @@
+ package net.sourceforge.pmd.lang.ast.xpath.saxon;
+ 
+-import net.sf.saxon.om.Navigator;
++import net.sf.saxon.tree.util.Navigator;
+ import net.sf.saxon.om.SequenceIterator;
+ import net.sourceforge.pmd.lang.ast.xpath.Attribute;
+ 
+diff -ur src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/DocumentNode.java src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/DocumentNode.java
+--- src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/DocumentNode.java	2013-05-01 12:29:22.000000000 +0100
++++ src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/DocumentNode.java	2013-06-28 17:53:41.009216277 +0100
+@@ -5,11 +5,11 @@
+ import java.util.Map;
+ 
+ import net.sf.saxon.om.Axis;
+-import net.sf.saxon.om.AxisIterator;
++import net.sf.saxon.tree.iter.AxisIterator;
+ import net.sf.saxon.om.DocumentInfo;
+-import net.sf.saxon.om.Navigator;
++import net.sf.saxon.tree.util.Navigator;
+ import net.sf.saxon.om.NodeInfo;
+-import net.sf.saxon.om.SingleNodeIterator;
++import net.sf.saxon.tree.iter.SingleNodeIterator;
+ import net.sf.saxon.type.Type;
+ import net.sourceforge.pmd.lang.ast.Node;
+ 
+@@ -57,8 +57,22 @@
+     /**
+      * {@inheritDoc}
+      */
+-    public NodeInfo selectID(String id) {
+-	throw createUnsupportedOperationException("DocumentInfo.selectID(String)");
++    public void setUserData(String key, Object value) {
++	throw createUnsupportedOperationException("DocumentInfo.setUserData(String, Object)");
++    }
++
++    /**
++     * {@inheritDoc}
++     */
++    public Object getUserData(String key) {
++	throw createUnsupportedOperationException("DocumentInfo.getUserData(String)");
++    }
++
++    /**
++     * {@inheritDoc}
++     */
++    public NodeInfo selectID(String id, boolean getParent) {
++	throw createUnsupportedOperationException("DocumentInfo.selectID(String,boolean)");
+     }
+ 
+     @Override
+diff -ur src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/ElementNode.java src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/ElementNode.java
+--- src.orig/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/ElementNode.java	2013-05-01 12:29:22.000000000 +0100
++++ src/main/java/net/sourceforge/pmd/lang/ast/xpath/saxon/ElementNode.java	2013-06-28 17:29:42.889914432 +0100
+@@ -1,13 +1,13 @@
+ package net.sourceforge.pmd.lang.ast.xpath.saxon;
+ 
+ import net.sf.saxon.om.Axis;
+-import net.sf.saxon.om.AxisIterator;
++import net.sf.saxon.tree.iter.AxisIterator;
+ import net.sf.saxon.om.DocumentInfo;
+-import net.sf.saxon.om.EmptyIterator;
+-import net.sf.saxon.om.Navigator;
+-import net.sf.saxon.om.NodeArrayIterator;
++import net.sf.saxon.tree.iter.EmptyIterator;
++import net.sf.saxon.tree.util.Navigator;
++import net.sf.saxon.tree.iter.NodeArrayIterator;
+ import net.sf.saxon.om.NodeInfo;
+-import net.sf.saxon.om.SingleNodeIterator;
++import net.sf.saxon.tree.iter.SingleNodeIterator;
+ import net.sf.saxon.type.Type;
+ import net.sourceforge.pmd.lang.ast.Node;
+ 
+diff -ur src.orig/main/java/net/sourceforge/pmd/lang/rule/xpath/SaxonXPathRuleQuery.java src/main/java/net/sourceforge/pmd/lang/rule/xpath/SaxonXPathRuleQuery.java
+--- src.orig/main/java/net/sourceforge/pmd/lang/rule/xpath/SaxonXPathRuleQuery.java	2013-05-01 12:29:22.000000000 +0100
++++ src/main/java/net/sourceforge/pmd/lang/rule/xpath/SaxonXPathRuleQuery.java	2013-06-30 21:18:56.992692283 +0100
+@@ -103,9 +103,9 @@
+ 		}
+ 	    }
+ 
+-	    List<ElementNode> nodes = xpathExpression.evaluate(xpathDynamicContext);
+-	    for (ElementNode elementNode : nodes) {
+-		results.add((Node) elementNode.getUnderlyingNode());
++	    List<net.sf.saxon.om.Item> nodes = xpathExpression.evaluate(xpathDynamicContext);
++	    for (net.sf.saxon.om.Item elementNode : nodes) {
++		results.add((Node) ((ElementNode)elementNode).getUnderlyingNode());
+ 	    }
+ 	} catch (XPathException e) {
+ 	    throw new RuntimeException(super.xpath + " had problem: " + e.getMessage(), e);
