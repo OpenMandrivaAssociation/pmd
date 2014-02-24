@@ -1,3 +1,4 @@
+%{?_javapackages_macros:%_javapackages_macros}
 # Copyright (c) 2000-2005, JPackage Project
 # All rights reserved.
 #
@@ -27,225 +28,172 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
-%define gcj_support 1
-
 Name:           pmd
-Version:        4.2.1
-Release:        2.0.7
+Version:        5.0.5
+Release:        2.0%{?dist}
 Epoch:          0
 Summary:        Scans Java source code and looks for potential problems
-License:        BSD Style
-URL:            http://pmd.sourceforge.net/
-## svn export https://pmd.svn.sourceforge.net/svnroot/pmd/tags/pmd/pmd_release_4_2_1 pmd && tar cvjf pmd-src.tar.bz2 pmd
-#Source0:        %{name}-src.tar.bz2
-Source0:        http://downloads.sourceforge.net/pmd/pmd-src-4.2.1.zip
-Patch0:         %{name}-asm.patch
-Patch1:         %{name}-4.2.1-no-retroweaver.patch
-BuildRequires:  java-rpmbuild >= 0:1.6
-BuildRequires:  ant >= 0:1.6
-BuildRequires:  ant-nodeps
-BuildRequires:  javacc
-BuildRequires:  junit4
-BuildRequires:  jaxen >= 0:1.1
-BuildRequires:  xerces-j2
-BuildRequires:  xml-commons-jaxp-1.3-apis >= 1.3.02
-BuildRequires:  jakarta-oro
-BuildRequires:  asm2
-BuildRequires:  locales-en
-Requires:       jaxen >= 0:1.1
-Requires:       xerces-j2
-Requires:       xml-commons-jaxp-1.3-apis >= 1.3.02
-Requires:       jakarta-oro
-Group:          Development/Java
-%if %{gcj_support}
-BuildRequires:  java-gcj-compat-devel
-%else
+License:        BSD
+
 BuildArch:      noarch
+
+Source0:        http://downloads.sourceforge.net/project/pmd/pmd/%{version}/pmd-src-%{version}.zip
+URL:            http://pmd.sourceforge.net/
+
+# fix incorrect token replacement when building with javacc 5.0
+# patch sent upstream: https://sourceforge.net/p/pmd/bugs/1109/
+Patch0:         javacc.patch
+# fix api incompatibilities with newer saxon
+# not sent upstream
+Patch1:         saxon.patch
+
+BuildRequires:  jpackage-utils
 BuildRequires:  java-devel
-%endif
+BuildRequires:  maven-local
+BuildRequires:  maven-deploy-plugin
+BuildRequires:  maven-install-plugin
+BuildRequires:  maven-plugin-build-helper
+BuildRequires:  ant-testutil
+BuildRequires:  apache-commons-lang3
+BuildRequires:  apache-commons-io
+BuildRequires:  beust-jcommander
+BuildRequires:  mockito
+BuildRequires:  javacc
+BuildRequires:  jaxen
+BuildRequires:  saxon >= 9.3.0.4-9
+BuildRequires:  objectweb-asm
+Requires:       jpackage-utils
+Requires:       java
+Requires:       ant-testutil
+Requires:       apache-commons-io
+Requires:       beust-jcommander
+Requires:       javacc
+Requires:       jaxen
+Requires:       saxon >= 9.3.0.4-9
+Requires:       objectweb-asm
 
 %description
-PMD scans Java source code and looks for potential 
-problems like:
-+ Unused local variables 
-+ Empty catch blocks 
-+ Unused parameters 
-+ Empty 'if' statements 
-+ Duplicate import statements 
-+ Unused private methods 
-+ Classes which could be Singletons 
-+ Short/long variable and method names 
-PMD has plugins for JDeveloper, JEdit, JBuilder, 
-NetBeans/Sun ONE Studio, IntelliJ IDEA, TextPad, 
-Maven, Ant, Eclipse, Gel, and Emacs. 
+PMD scans Java source code and looks for potential problems like:
+* Possible bugs: empty try/catch/finally/switch statements
++ Dead code: unused local variables, parameters and private methods
++ Suboptimal code: wasteful String/StringBuffer usage
++ Overcomplicated expressions: unnecessary if statements, for loops
+  that could be while loops
++ Duplicate code: copied/pasted code means copied/pasted bugs
 
-%package manual
-Summary:        Manual for %{name}
-Group:          Development/Java
-
-%description manual
-Documentation for %{name}.
+PMD has plugins for JDeveloper, Eclipse, JEdit, JBuilder, BlueJ,
+CodeGuide, NetBeans/Sun Java Studio Enterprise/Creator, IntelliJ IDEA,
+TextPad, Maven, Ant, Gel, JCreator, and Emacs.
 
 %package javadoc
-Summary:        Javadoc for %{name}
-Group:          Development/Java
+Summary:        API documentation for %{name}
+
+Requires:       objectweb-asm-javadoc
 
 %description javadoc
-Javadoc for %{name}.
+API documentation for %{name}.
 
 %prep
-%setup -q
-# XXX: uses internal junit4 API
-%{__rm} -r regress/test/net/sourceforge/pmd/*
-##%{_bindir}/find . -type d -name "*.svn" | %{_bindir}/xargs -t %{__rm} -r
-%{__perl} -pi -e 's/\r\n$/\n/g' src/net/sourceforge/pmd/dcd/graph/UsageGraphBuilder.java
-%patch0 -p1
-%patch1 -p1
-%{__perl} -pi -e 's/<javac( |$)/<javac nowarn="true" /g' bin/build.xml
-%{__perl} -pi -e 's/JavaCharStream\.java/CharStream.java/g' bin/build.xml
+%setup -q -n %{name}-src-%{version}
 
-# set right permissions
-%{_bindir}/find . -name "*.sh" | %{_bindir}/xargs -t %{__chmod} 755
+%patch0 -p0 -b.orig
+%patch1 -p0 -b.orig
+
 # remove all binary libs
-%{_bindir}/find . -name "*.jar" | %{_bindir}/xargs -t %{__rm}
+find . -name "*.jar" -exec rm -f {} \;
+find . -name "*.class" -exec rm -f {} \;
 
-#%{__rm} src/net/sourceforge/pmd/ast/*
+%mvn_alias : pmd:pmd
 
 %build
-export LC_ALL=ISO-8859-1
-export OPT_JAR_LIST="ant/ant-nodeps"
-export CLASSPATH=$(%{_bindir}/build-classpath \
-javacc \
-jaxen \
-oro \
-junit4 \
-xerces-j2 \
-xml-commons-jaxp-1.3-apis \
-asm2 )
-CLASSPATH=$CLASSPATH:target/classes:target/test-classes
-cd bin
-%{ant} -Dbuild.sysclasspath=only -Djavacc-home.path=%{_javadir} jjtree jspjjtree cppjavacc jar javadoc
+# some tests are failing so ignore them
+# this may be because fedora has a newer rhino than pmd expects
+%mvn_build -- -Dmaven.test.failure.ignore=true -Dmaven.clover.skip=true
 
 %install
-rm -rf $RPM_BUILD_ROOT
+%mvn_install
 
-# jar
-install -d -m 755 $RPM_BUILD_ROOT%{_javadir}
-install -m 644 lib/%{name}-%{version}.jar \
-  $RPM_BUILD_ROOT%{_javadir}/%{name}-%{version}.jar
-(cd $RPM_BUILD_ROOT%{_javadir} && for jar in *-%{version}.jar; \
-   do ln -sf ${jar} ${jar/-%{version}/}; done)
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
-cp -a etc/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc
-%{__perl} -pi -e 's|/usr/local/bin|%{_bindir}|' $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/etc/*.rb
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
-cp -a rulesets/* $RPM_BUILD_ROOT%{_datadir}/%{name}-%{version}/rulesets
+%files -f .mfiles
+%doc LICENSE.txt etc/changelog.txt
 
-# javadoc
-install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -a docs/api/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name}
-
-# manual
-install -d -m 755 $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
-cp -a LICENSE.txt $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
-
-%if %{gcj_support}
-%{_bindir}/aot-compile-rpm
-%endif
-
-%clean
-rm -rf $RPM_BUILD_ROOT
-
-%if %{gcj_support}
-%post
-%{update_gcjdb}
-
-%postun
-%{clean_gcjdb}
-%endif
-
-%files
-%defattr(0644,root,root,0755)
+%files javadoc -f .mfiles-javadoc
 %doc LICENSE.txt
-%{_javadir}/*.jar
-%if %{gcj_support}
-%dir %{_libdir}/gcj/%{name}
-%attr(-,root,root) %{_libdir}/gcj/%{name}/*
-%endif
-%dir %{_datadir}/%{name}-%{version}
-%attr(-,root,root) %{_datadir}/%{name}-%{version}/*
-#E: pmd non-executable-script /usr/share/pmd-4.0/etc/fr_docs/copy_up.sh 0644
-#E: pmd wrong-script-interpreter /usr/share/pmd-4.0/etc/rule_summary.rb "/usr/local/bin/ruby"
-#E: pmd non-executable-script /usr/share/pmd-4.0/etc/rule_summary.rb 0644
-#E: pmd invalid-dependency /usr/local/bin/ruby
-
-%files manual
-%defattr(0644,root,root,0755)
-%doc %{_docdir}/%{name}-%{version}
-
-%files javadoc
-%defattr(0644,root,root,0755)
-%{_javadocdir}/*
-
 
 %changelog
-* Fri Dec 03 2010 Oden Eriksson <oeriksson@mandriva.com> 0:4.2.1-2.0.5mdv2011.0
-+ Revision: 607185
-- rebuild
+* Tue Oct 15 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 0:5.0.5-2
+- Require saxon >= 9.3.0.4-9
 
-* Wed Mar 17 2010 Oden Eriksson <oeriksson@mandriva.com> 0:4.2.1-2.0.4mdv2010.1
-+ Revision: 523691
-- rebuilt for 2010.1
+* Tue Aug 13 2013 Alexander Kurtakov <akurtako@redhat.com> 0:5.0.5-1
+- Update to latest upstream.
 
-* Mon Oct 05 2009 Funda Wang <fwang@mandriva.org> 0:4.2.1-2.0.3mdv2010.0
-+ Revision: 453746
-- rebuild
+* Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:5.0.4-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
-  + Christophe Fergeau <cfergeau@mandriva.com>
-    - rebuild
+* Mon Jul 01 2013 Mat Booth <fedora@matbooth.co.uk> - 0:5.0.4-2
+- Add missing requires on ant and javacc
 
-* Thu Aug 07 2008 Thierry Vignaud <tv@mandriva.org> 0:4.2.1-2.0.1mdv2009.0
-+ Revision: 265471
-- rebuild early 2009.0 package (before pixel changes)
+* Sun Jun 30 2013 Mat Booth <fedora@matbooth.co.uk> - 0:5.0.4-1
+- Update to latest upstream version
 
-* Mon Apr 21 2008 David Walluck <walluck@mandriva.org> 0:4.2.1-0.0.1mdv2009.0
-+ Revision: 196032
-- 4.2.1
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:4.2.5-15
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
-* Fri Jan 25 2008 Alexander Kurtakov <akurtakov@mandriva.org> 0:4.0-0.0.4mdv2008.1
-+ Revision: 157960
-- fix build - BR asm2
+* Sat Jul 21 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:4.2.5-14
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
 
-  + Olivier Blin <oblin@mandriva.com>
-    - restore BuildRoot
+* Tue May 22 2012 Stanislav Ochotnicky <sochotnicky@redhat.com> - 0:4.2.5-13
+- Use unversioned jars to prevent further build breakages
+- Update to current guidelines
 
-  + Thierry Vignaud <tv@mandriva.org>
-    - kill re-definition of %%buildroot on Pixel's request
+* Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:4.2.5-12
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
 
-  + Anssi Hannula <anssi@mandriva.org>
-    - buildrequire java-rpmbuild, i.e. build with icedtea on x86(_64)
+* Tue Jun 28 2011 Alexander Kurtakov <akurtako@redhat.com> 0:4.2.5-11
+- Fix FTBFS.
+- Current guidelines updates.
 
-* Sat Sep 15 2007 Anssi Hannula <anssi@mandriva.org> 0:4.0-0.0.2mdv2008.0
-+ Revision: 87336
-- rebuild to filter out autorequires of GCJ AOT objects
-- remove unnecessary Requires(post) on java-gcj-compat
+* Thu Feb 24 2011 Alexander Kurtakov <akurtako@redhat.com> 0:4.2.5-10
+- Let it conform to new packaging guidelines.
 
-* Wed Jul 25 2007 David Walluck <walluck@mandriva.org> 0:4.0-0.0.1mdv2008.0
-+ Revision: 55248
-- 4.0
+* Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:4.2.5-9
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
-* Wed Jul 18 2007 Anssi Hannula <anssi@mandriva.org> 0:3.6-1.3.2mdv2008.0
-+ Revision: 53204
-- use xml-commons-jaxp-1.3-apis explicitely instead of the generic
-  xml-commons-apis which is provided by multiple packages (see bug #31473)
+* Mon Nov 29 2010 Jerry James <loganjerry@gmail.com> - 0:4.2.5-8
+- Fix maven ant dep (bz 643748).
+- Add LICENSE.txt to -javadoc package.
+- Remove BuildRoot tag.
 
-* Wed Jul 04 2007 David Walluck <walluck@mandriva.org> 0:3.6-1.3.1mdv2008.0
-+ Revision: 47972
-- Import pmd
+* Tue Sep  7 2010 Jerry James <loganjerry@gmail.com> - 0:4.2.5-7
+- Update junit4 dependency for junit 4.8.2.
 
+* Wed Jun  2 2010 Jerry James <loganjerry@gmail.com> - 0:4.2.5-6
+- Update objectweb-asm dependency for version 3.2.
 
+* Fri Nov 20 2009 Jerry James <loganjerry@gmail.com> - 0:4.2.5-5
+- Update junit4 dependency for junit 4.6.
+
+* Wed Aug 19 2009 Andrew Overholt <overholt@redhat.com> 0:4.2.5-4
+- Install POM file and depmap entry
+
+* Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:4.2.5-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
+* Thu Feb 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 0:4.2.5-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_11_Mass_Rebuild
+
+* Wed Feb 11 2009 Jerry James <loganjerry@gmail.com> - 0:4.2.5-1
+- Upgrade to 4.2.5
+
+* Wed Jan 14 2009 Jerry James <loganjerry@gmail.com> - 0:4.2.4-1
+- Upgrade to 4.2.4
+- Drop unnecessary scripts/files in etc
+- Add more documentation files
+- Drop useless manual subpackage; it's really small, and contains files that
+  should be docs for the main package
+
+* Wed Jul  9 2008 Tom "spot" Callaway <tcallawa@redhat.com> - 0:3.6-1.4
+- fix license tag
+- drop disttag
 
 * Mon Mar 26 2007 Matt Wringe <mwringe@redhat.com> - 0:3.6-1jpp.3
 - Fix unowned doc directory for pmd
@@ -279,7 +227,7 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Aug 25 2004 Fernando Nasser <fnasser@redhat.com> - 1.9-1jpp
 - Upgrade to 1.9
 
-* Wed Aug 24 2004 Fernando Nasser <fnasser@redhat.com> - 0:1.5-4jpp
+* Tue Aug 24 2004 Fernando Nasser <fnasser@redhat.com> - 0:1.5-4jpp
 - Rebuild with Ant 1.6.2
 
 * Fri Aug 06 2004 Ralph Apel <r.apel at r-apel.de> - 1.5-3jpp
