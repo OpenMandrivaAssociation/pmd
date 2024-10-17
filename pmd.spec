@@ -38,7 +38,7 @@ License:        BSD
 BuildArch:      noarch
 
 Source0:        http://downloads.sourceforge.net/project/pmd/pmd/%{version}/pmd-src-%{version}.zip
-URL:            http://pmd.sourceforge.net/
+URL:            https://pmd.sourceforge.net/
 
 # fix incorrect token replacement when building with javacc 5.0
 # patch sent upstream: https://sourceforge.net/p/pmd/bugs/1109/
